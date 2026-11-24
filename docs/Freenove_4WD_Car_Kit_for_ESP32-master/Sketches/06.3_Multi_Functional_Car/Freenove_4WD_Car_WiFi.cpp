@@ -136,13 +136,18 @@ bool cameraSetup(void) {
   config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 10000000;
-  config.frame_size = FRAMESIZE_HQVGA;
-  config.pixel_format = PIXFORMAT_JPEG; // for streaming
-  config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+//  config.xclk_freq_hz = 10000000;
+  config.xclk_freq_hz = 20000000; // increase clock frequency to 20 MHz
+//  config.frame_size = FRAMESIZE_HQVGA;
+  config.frame_size = FRAMESIZE_QQVGA; // smaller frame size for higher frame rate
+//  config.pixel_format = PIXFORMAT_JPEG; // for streaming
+  config.pixel_format = PIXFORMAT_RGB565; // faster processing compared to JPEG
+//  config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+  config.grab_mode = CAMERA_GRAB_LATEST; // grab the latest frame for higher frame rate
   config.fb_location = CAMERA_FB_IN_PSRAM;
   config.jpeg_quality = 12;
-  config.fb_count = 1;
+//  config.fb_count = 1;
+  config.fb_count = 2; // use 2 frame buffers for better performance
   
   // camera init
   esp_err_t err = esp_camera_init(&config);
@@ -160,31 +165,40 @@ bool cameraSetup(void) {
   sensor_t * s = esp_camera_sensor_get();
   // drop down frame size for higher initial frame rate
   uint16_t pid = s->id.PID;
-  if(pid == OV2640_PID){
-    s->set_hmirror(s, 1);
-    s->set_vflip(s, 1);     
-  }
-  else if(pid == OV3660_PID){
-    s->set_hmirror(s, 1);
-    s->set_vflip(s, 0);     
-  }
-  else if(pid == GC2145_PID){
+
+  // Print the PID to the serial monitor
+  Serial.print("Camera PID: 0x");
+  Serial.println(pid, HEX);
+
+//  if(pid == OV2640_PID){
+//    s->set_hmirror(s, 1);
+//    s->set_vflip(s, 1);     
+//  }
+//  else if(pid == OV3660_PID){
+//    s->set_hmirror(s, 1);
+//    s->set_vflip(s, 0);     
+//  }
+//  else if(pid == GC2145_PID){
+//    s->set_hmirror(s, 0);
+//    delay(500);
+//    s->set_vflip(s, 1);      
+//  }
+//  else if(pid == GC0308_PID){
+//    s->set_hmirror(s, 0);
+//    delay(500);
+//    s->set_vflip(s, 1);     
+//  }
+//  else if (pid == 0x9B) { 
+//    s->set_hmirror(s, 1); // Enable horizontal flip
+//    s->set_vflip(s, 1);   // Enable vertical flip
+//  }
+//  else{
     s->set_hmirror(s, 0);
-    delay(500);
-    s->set_vflip(s, 1);      
-  }
-  else if(pid == GC0308_PID){
-    s->set_hmirror(s, 0);
-    delay(500);
-    s->set_vflip(s, 1);     
-  }
-  else{
-    s->set_hmirror(s, 1);
     s->set_vflip(s, 1);       
-  }
-  s->set_brightness(s, 1);  // Slightly increase brightness
-  s->set_saturation(s, 0);  // Reduce saturation
-  s->set_ae_level(s, -3);   // Set exposure compensation level
+//  }
+  // s->set_brightness(s, 1);  // Slightly increase brightness
+  // s->set_saturation(s, 0);  // Reduce saturation
+  // s->set_ae_level(s, -3);   // Set exposure compensation level
 
   Serial.println("Camera initialization complete!");
   return true;
