@@ -136,19 +136,14 @@ bool cameraSetup(void) {
   config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
-//  config.xclk_freq_hz = 10000000;
-  config.xclk_freq_hz = 20000000; // increase clock frequency to 20 MHz
-//  config.frame_size = FRAMESIZE_HQVGA;
-  config.frame_size = FRAMESIZE_QQVGA; // smaller frame size for higher frame rate
-//  config.pixel_format = PIXFORMAT_JPEG; // for streaming
-  config.pixel_format = PIXFORMAT_RGB565; // faster processing compared to JPEG
-//  config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
-  config.grab_mode = CAMERA_GRAB_LATEST; // grab the latest frame for higher frame rate
+  config.xclk_freq_hz = 20000000; // OV2640 max; 10 MHz halves the sensor frame rate
+  config.frame_size = FRAMESIZE_HQVGA;
+  config.pixel_format = PIXFORMAT_JPEG; // hardware JPEG; RGB565 is much larger over WiFi
+  config.grab_mode = CAMERA_GRAB_LATEST; // always send the newest frame to reduce lag
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 12;
-//  config.fb_count = 1;
-  config.fb_count = 2; // use 2 frame buffers for better performance
-  
+  config.jpeg_quality = 15; // higher value = smaller JPEG = faster transmission
+  config.fb_count = 2; // double buffering so capture overlaps with sending
+
   // camera init
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
@@ -172,29 +167,29 @@ bool cameraSetup(void) {
 
 //  if(pid == OV2640_PID){
 //    s->set_hmirror(s, 1);
-//    s->set_vflip(s, 1);     
+//    s->set_vflip(s, 1);
 //  }
 //  else if(pid == OV3660_PID){
 //    s->set_hmirror(s, 1);
-//    s->set_vflip(s, 0);     
+//    s->set_vflip(s, 0);
 //  }
 //  else if(pid == GC2145_PID){
 //    s->set_hmirror(s, 0);
 //    delay(500);
-//    s->set_vflip(s, 1);      
+//    s->set_vflip(s, 1);
 //  }
 //  else if(pid == GC0308_PID){
 //    s->set_hmirror(s, 0);
 //    delay(500);
-//    s->set_vflip(s, 1);     
+//    s->set_vflip(s, 1);
 //  }
-//  else if (pid == 0x9B) { 
+//  else if (pid == 0x9B) {
 //    s->set_hmirror(s, 1); // Enable horizontal flip
 //    s->set_vflip(s, 1);   // Enable vertical flip
 //  }
 //  else{
     s->set_hmirror(s, 0);
-    s->set_vflip(s, 1);       
+    s->set_vflip(s, 1);
 //  }
   // s->set_brightness(s, 1);  // Slightly increase brightness
   // s->set_saturation(s, 0);  // Reduce saturation

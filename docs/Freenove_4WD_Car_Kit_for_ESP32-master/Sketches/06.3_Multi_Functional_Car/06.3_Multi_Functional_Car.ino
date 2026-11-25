@@ -129,9 +129,10 @@ void loopTask_Camera(void *pvParameters) {
     WiFiClient client = server_Camera.accept();//listen for incoming clients
     if (client) {//if you get a client
       Serial.println("Camera_Server connected to a client.");
+      client.setNoDelay(true); // disable Nagle to avoid buffering delays
       if (client.connected()) {
         while (client.connected()) {//loop while the client's connected
-          if (videoFlag) { 
+          if (videoFlag) {
             camera_fb_t* fb = esp_camera_fb_get();
             size_t jpg_buf_len = 0;
             uint8_t *jpg_buf = NULL;
@@ -142,7 +143,7 @@ void loopTask_Camera(void *pvParameters) {
                   fb = NULL;
                   if (!jpeg_converted) {
                       Serial.println("JPEG compression failed");
-                      continue; 
+                      continue;
                   }
               }
               else {
@@ -169,7 +170,7 @@ void loopTask_Camera(void *pvParameters) {
                 jpg_buf = NULL;
             }
           } else {
-              delay(100); 
+              delay(100);
           }
         }
         //close the connection:
