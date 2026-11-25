@@ -14,14 +14,15 @@
 #include "Freenove_4WD_Car_Emotion.h"
 #include "Freenove_4WD_Car_WS2812.h"
 #include "Freenove_4WD_Car_For_ESP32.h"
+#include "wifi_secrets.h" // git-ignored; copy from wifi_secrets.example.h
 
 String CmdArray[8];
 int paramters[8];
 bool videoFlag = 0;
 
 void WiFi_Init() {
-  ssid_Router     =   "***";    //Modify according to your router name
-  password_Router =   "***";    //Modify according to your router password
+  ssid_Router     =   WIFI_ROUTER_SSID;
+  password_Router =   WIFI_ROUTER_PASSWORD;
   ssid_AP         =   "Sunshine";    //ESP32 turns on an AP and calls it Sunshine
   password_AP     =   "Sunshine";    //Set your AP password for ESP32 to Sunshine
 }

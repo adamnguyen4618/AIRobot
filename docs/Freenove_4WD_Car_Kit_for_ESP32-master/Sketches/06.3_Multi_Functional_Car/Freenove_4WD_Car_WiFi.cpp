@@ -188,8 +188,9 @@ bool cameraSetup(void) {
 //    s->set_vflip(s, 1);   // Enable vertical flip
 //  }
 //  else{
-    s->set_hmirror(s, 0);
     s->set_vflip(s, 1);
+    delay(500);
+    s->set_hmirror(s, 1);
 //  }
   // s->set_brightness(s, 1);  // Slightly increase brightness
   // s->set_saturation(s, 0);  // Reduce saturation
