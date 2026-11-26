@@ -27,6 +27,8 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+WORKSPACE_HEIGHT = 400  # px of design space below the 762x610 layout, reserved for new controls
+
 _app_nap_activity = None
 
 def disable_app_nap():
@@ -67,6 +69,19 @@ class mywindow(QWidget, Ui_Client):
     def __init__(self):
         super(mywindow, self).__init__()
         self.setupUi(self)
+
+        # Parent new buttons to self.workspace; it is part of the design size, so it scales with the window.
+        ui_height = self.height()
+        self.resize(self.width(), ui_height + WORKSPACE_HEIGHT)
+        self.workspace = QtWidgets.QWidget(self)
+        self.workspace.setGeometry(0, ui_height, self.width(), WORKSPACE_HEIGHT)
+
+        self.workspace_separator = QtWidgets.QFrame(self.workspace)
+        self.workspace_separator.setGeometry(0, 0, self.width(), 2)
+        self.workspace_separator.setStyleSheet("background:#AAAAAA;")
+
+        self.Btn_Placeholder = QtWidgets.QPushButton("Placeholder", self.workspace)
+        self.Btn_Placeholder.setGeometry(10, 10, 90, 30)
 
         self.endChar='\n'
         self.intervalChar='#'
@@ -509,5 +524,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     disable_app_nap()
     window = mywindow()
+    screen = app.primaryScreen()
+    # availableGeometry().top() is the first row below the macOS menu bar; y=0 would be clamped to it anyway.
+    window.move(screen.geometry().width() // 2, screen.availableGeometry().top())
     window.show()
     sys.exit(app.exec_())
