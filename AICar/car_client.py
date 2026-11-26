@@ -19,6 +19,7 @@ POWER_INTERVAL = 3.0
 # The car answers every CMD_POWER poll, so a silent command link is dead.
 CMD_STALE_TIMEOUT = 10.0
 MAX_FRAME_BYTES = 512 * 1024
+MOTOR_STOP = f"{cmd.CMD_MOTOR}#0#0#0#0\n"
 
 
 def is_valid_jpeg(buf):
@@ -38,7 +39,7 @@ def _close_socket(sock):
         pass
 
 
-class VideoStreaming:
+class CarClient:
     """Command (port 4000) + video (port 7000) client with automatic reconnect.
 
     Callbacks are invoked from worker threads; the GUI must marshal them to the UI thread.
@@ -52,6 +53,7 @@ class VideoStreaming:
         self.connect_Flag = False
         self._cmd_sock = None
         self._send_lock = threading.Lock()
+        self._pending_stop = False
         self._stop = threading.Event()
         self._last_rx = time.monotonic()
 
@@ -71,6 +73,12 @@ class VideoStreaming:
         self.video_enabled = enabled
         self._last_rx = time.monotonic()
         self.sendData(f"{cmd.CMD_VIDEO}#{1 if enabled else 0}\n")
+
+    def send_motor_stop(self):
+        # The car keeps its last motor command forever, so a stop that can't be sent now is resent on reconnect.
+        self._pending_stop = True
+        if self.sendData(MOTOR_STOP):
+            self._pending_stop = False
 
     def _emit_status(self, status, stop):
         if self.on_status and stop is self._stop:
@@ -110,6 +118,8 @@ class VideoStreaming:
             self._emit_status('connected', stop)
             # Re-apply video state; a click on "Open Video" before connecting would otherwise be lost.
             self.set_video(self.video_enabled)
+            if self._pending_stop and self.sendData(MOTOR_STOP):
+                self._pending_stop = False
 
             cmd_thread = threading.Thread(target=self._cmd_loop, args=(cmd_sock, stop, dead), daemon=True)
             cmd_thread.start()

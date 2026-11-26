@@ -40,7 +40,7 @@ class Spin:
         self._timer.stop()
         if not self.spinning:
             return
-        self.tcp.sendData(f"{cmd.CMD_MOTOR}#0#0#0#0\n")
+        self.tcp.send_motor_stop()
         self._set_spinning(False)
 
     def _set_spinning(self, value):

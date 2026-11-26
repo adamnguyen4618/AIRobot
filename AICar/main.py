@@ -13,8 +13,9 @@ import string
 
 from Command import COMMAND as cmd
 from Client_Ui import Ui_Client
-from Video import *
+from car_client import CarClient
 from skills.spin import Spin
+from skills.circle import Circle
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
@@ -85,6 +86,10 @@ class mywindow(QWidget, Ui_Client):
         self.Btn_SpinLeft.setGeometry(10, 10, 90, 30)
         self.Btn_SpinRight = QtWidgets.QPushButton("Spin Right", self.workspace)
         self.Btn_SpinRight.setGeometry(110, 10, 90, 30)
+        self.Btn_CircleLeft = QtWidgets.QPushButton("Circle Left", self.workspace)
+        self.Btn_CircleLeft.setGeometry(210, 10, 90, 30)
+        self.Btn_CircleRight = QtWidgets.QPushButton("Circle Right", self.workspace)
+        self.Btn_CircleRight.setGeometry(310, 10, 90, 30)
 
         self.endChar='\n'
         self.intervalChar='#'
@@ -120,12 +125,16 @@ class mywindow(QWidget, Ui_Client):
         ipValidator = QRegExpValidator(QRegExp('^((2[0-4]\d|25[0-5]|\d?\d|1\d{2})\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)$'))
         self.IP.setValidator(ipValidator)
 
-        self.TCP=VideoStreaming()
+        self.TCP=CarClient()
         self.servo1=90; self.servo2=90
 
         self.spin_skill = Spin(self.TCP, self.on_spin_state_changed)
         self.Btn_SpinLeft.clicked.connect(lambda: self.spin_skill.toggle(Spin.LEFT))
         self.Btn_SpinRight.clicked.connect(lambda: self.spin_skill.toggle(Spin.RIGHT))
+
+        self.circle_skill = Circle(self.TCP, self.on_circle_state_changed)
+        self.Btn_CircleLeft.clicked.connect(lambda: self.circle_skill.toggle(Circle.LEFT))
+        self.Btn_CircleRight.clicked.connect(lambda: self.circle_skill.toggle(Circle.RIGHT))
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.progress_Power.setMinimum(0); self.progress_Power.setMaximum(100)
@@ -154,6 +163,11 @@ class mywindow(QWidget, Ui_Client):
         button, label = ((self.Btn_SpinLeft, "Spin Left") if direction == Spin.LEFT
                          else (self.Btn_SpinRight, "Spin Right"))
         button.setText("Stop" if spinning else label)
+
+    def on_circle_state_changed(self, running, direction):
+        button, label = ((self.Btn_CircleLeft, "Circle Left") if direction == Circle.LEFT
+                         else (self.Btn_CircleRight, "Circle Right"))
+        button.setText("Stop" if running else label)
 
     def update_battery_style(self, value):
         if value > 60: color = "#4CAF50"
@@ -347,6 +361,7 @@ class mywindow(QWidget, Ui_Client):
             self.Btn_Video.setText('Open Video')
             self.TCP.set_video(False)
             self.spin_skill.stop()
+            self.circle_skill.stop()
             self.TCP.stop()
             self.current_video_source_pixmap = self.original_car_pixmap
             self.update_video_pixmap()
@@ -374,7 +389,7 @@ class mywindow(QWidget, Ui_Client):
         if self.commandFlag: self.TCP.sendData(f"{cmd.CMD_MOTOR}#2500#2500#-2500#-2500\n")
 
     def on_btn_Stop(self):
-        if self.commandFlag: self.TCP.sendData(f"{cmd.CMD_MOTOR}#0#0#0#0\n")
+        if self.commandFlag: self.TCP.send_motor_stop()
 
     def on_btn_Buzzer(self):
         if self.commandFlag:
