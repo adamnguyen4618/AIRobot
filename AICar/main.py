@@ -14,6 +14,7 @@ import string
 from Command import COMMAND as cmd
 from Client_Ui import Ui_Client
 from Video import *
+from skills.spin import Spin
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
@@ -80,8 +81,10 @@ class mywindow(QWidget, Ui_Client):
         self.workspace_separator.setGeometry(0, 0, self.width(), 2)
         self.workspace_separator.setStyleSheet("background:#AAAAAA;")
 
-        self.Btn_Placeholder = QtWidgets.QPushButton("Placeholder", self.workspace)
-        self.Btn_Placeholder.setGeometry(10, 10, 90, 30)
+        self.Btn_SpinLeft = QtWidgets.QPushButton("Spin Left", self.workspace)
+        self.Btn_SpinLeft.setGeometry(10, 10, 90, 30)
+        self.Btn_SpinRight = QtWidgets.QPushButton("Spin Right", self.workspace)
+        self.Btn_SpinRight.setGeometry(110, 10, 90, 30)
 
         self.endChar='\n'
         self.intervalChar='#'
@@ -120,6 +123,10 @@ class mywindow(QWidget, Ui_Client):
         self.TCP=VideoStreaming()
         self.servo1=90; self.servo2=90
 
+        self.spin_skill = Spin(self.TCP, self.on_spin_state_changed)
+        self.Btn_SpinLeft.clicked.connect(lambda: self.spin_skill.toggle(Spin.LEFT))
+        self.Btn_SpinRight.clicked.connect(lambda: self.spin_skill.toggle(Spin.RIGHT))
+
         self.setFocusPolicy(Qt.StrongFocus)
         self.progress_Power.setMinimum(0); self.progress_Power.setMaximum(100)
         self.progress_Power.setValue(100)
@@ -142,6 +149,11 @@ class mywindow(QWidget, Ui_Client):
         self.frame_ready.connect(self.show_frame)
         self.power_ready.connect(self.set_power)
         self.status_changed.connect(self.on_status_changed)
+
+    def on_spin_state_changed(self, spinning, direction):
+        button, label = ((self.Btn_SpinLeft, "Spin Left") if direction == Spin.LEFT
+                         else (self.Btn_SpinRight, "Spin Right"))
+        button.setText("Stop" if spinning else label)
 
     def update_battery_style(self, value):
         if value > 60: color = "#4CAF50"
@@ -334,6 +346,7 @@ class mywindow(QWidget, Ui_Client):
             self.Btn_Connect.setText("Connect")
             self.Btn_Video.setText('Open Video')
             self.TCP.set_video(False)
+            self.spin_skill.stop()
             self.TCP.stop()
             self.current_video_source_pixmap = self.original_car_pixmap
             self.update_video_pixmap()
